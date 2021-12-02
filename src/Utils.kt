@@ -8,7 +8,7 @@ import java.security.MessageDigest
 fun readInput(name: String) = File("input", "$name.txt").readLines()
 
 fun Int.report(correctAnswer: Int? = null) = println(this).also {
-    check(this == correctAnswer)
+    correctAnswer?.let { check(this == it) }
 }
 
 /**

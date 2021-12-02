@@ -9,15 +9,12 @@ fun main() {
 }
 
 private fun part1(data: Sequence<Int>) = data
-    .windowed(2)
-    .map { (first, second) -> second - first }
-    .filter { it > 0 }
+    .zipWithNext { a, b -> a < b }
+    .filter { it }
     .count()
 
 private fun part2(data: Sequence<Int>) = data
-    .windowed(3)
-    .map { (a, b, c) -> a + b + c }
-    .windowed(2)
-    .map { (first, second) -> second - first }
-    .filter { it > 0 }
+    .windowed(4)
+    .map { (a, _, _, d) -> a < d }
+    .filter { it }
     .count()
