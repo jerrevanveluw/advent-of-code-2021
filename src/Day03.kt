@@ -1,3 +1,7 @@
+import Counter.Strategy
+import Counter.Strategy.LEAST
+import Counter.Strategy.MOST
+
 fun main() {
 
     val data = readInput("Day03").asSequence()
@@ -9,45 +13,44 @@ fun main() {
 
 private fun part1(data: Sequence<String>) = data
     .fold(buildList { repeat(12) { add(Counter()) } }) { acc, cur ->
-        acc.zip(cur.map(::Counter)).map { (a, b) -> a + b }
+        acc.zip(cur.map { it.toCounter() }).map { (a, b) -> a + b }
     }
-    .let { it.most().toInt(2) * it.least().toInt(2) }
+    .let { it.toInt(MOST) * it.toInt(LEAST) }
 
 private fun part2(data: Sequence<String>) = data.toList().run {
-    findMostRecursively().first().toInt(2) * findLeastRecursively().first().toInt(2)
+    findRecursively(MOST) * findRecursively(LEAST)
 }
 
 data class Counter(
-    val zero: Int = 0,
-    val one: Int = 0
+    val zeros: Int = 0,
+    val ones: Int = 0
 ) {
-    constructor(char: Char) : this(
-        zero = if (char.digitToInt() == 0) 1 else 0,
-        one = if (char.digitToInt() == 1) 1 else 0,
-    )
 
-    fun most() = if (zero > one) "0" else "1"
+    fun toInt(strategy: Strategy) = when (strategy) {
+        MOST -> if (zeros > ones) 0 else 1
+        LEAST -> if (zeros <= ones) 0 else 1
+    }
 
-    fun least() = if (zero < one) "0" else "1"
+    operator fun plus(that: Counter) = Counter(zeros + that.zeros, ones + that.ones)
 
-    operator fun plus(that: Counter) = Counter(zero + that.zero, one + that.one)
+    enum class Strategy {
+        MOST, LEAST
+    }
 }
 
-fun List<Counter>.most() = joinToString("") { it.most() }
-fun List<Counter>.least() = joinToString("") { it.least() }
+fun Char.toCounter() = when (digitToInt()) {
+    0 -> Counter(1, 0)
+    1 -> Counter(0, 1)
+    else -> throw IllegalStateException()
+}
 
-fun List<String>.findMostRecursively(idx: Int = 0): List<String> =
-    if (size > 1) filter { it[idx].digitToInt() == findMostUsedDigit(idx) }.findMostRecursively(idx + 1)
-    else this
+fun List<Counter>.toInt(strategy: Strategy) = joinToString("") { it.toInt(strategy).toString() }.toInt(2)
 
-fun List<String>.findLeastRecursively(idx: Int = 0): List<String> =
-    if (size > 1) filter { it[idx].digitToInt() == findLeastUsedDigit(idx) }.findLeastRecursively(idx + 1)
-    else this
+fun List<String>.findRecursively(strategy: Strategy, idx: Int = 0): Int =
+    if (size == 1) this.first().toInt(2)
+    else filter { it[idx].digitToInt() == findDigit(idx, strategy) }
+        .findRecursively(strategy, idx + 1)
 
-fun List<String>.findMostUsedDigit(idx: Int) = map { it[idx] }
-    .fold(Counter()) { acc, cur -> acc + Counter(cur) }
-    .run { if (zero > one) 0 else 1 }
-
-fun List<String>.findLeastUsedDigit(digit: Int) = map { it[digit] }
-    .fold(Counter()) { acc, cur -> acc + Counter(cur) }
-    .run { if (zero <= one) 0 else 1 }
+fun List<String>.findDigit(idx: Int, strategy: Strategy) = map { it[idx] }
+    .fold(Counter()) { acc, cur -> acc + cur.toCounter() }
+    .toInt(strategy)
