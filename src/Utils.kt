@@ -11,6 +11,10 @@ fun Int.report(correctAnswer: Int? = null) = println(this).also {
     correctAnswer?.let { check(this == it) }
 }
 
+fun Long.report(correctAnswer: Long? = null) = println(this).also {
+    correctAnswer?.let { check(this == it) }
+}
+
 /**
  * Converts string to md5 hash.
  */
