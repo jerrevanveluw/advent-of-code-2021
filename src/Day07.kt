@@ -1,12 +1,35 @@
+import kotlin.math.abs
+
 fun main() {
-
-    val data = readInput("Day07").asSequence()
-
-    part1(data).report()
-    part2(data).report()
-
+    Day07.all()
 }
 
-private fun part1(data: Sequence<String>) = data.let { 0 }
+object Day07 {
 
-private fun part2(data: Sequence<String>) = data.let { 0 }
+    fun all() {
+        println("Day 07:")
+        part1()
+        part2()
+    }
+
+    private fun part1() = prepare().toList().sorted()
+        .run {
+            val median = this[size / 2]
+            map { abs(median - it) }
+        }
+        .sum()
+        .report(328318)
+
+    private fun part2() = prepare()
+        .run {
+            val average = average().toInt()
+            map { abs(average - it) }
+        }
+        .sumOf { calculateFuel(it) }
+        .report(89791146)
+
+    private fun prepare() = readInput("Day07").asSequence().flatMap { it.split(",") }.map { it.toInt() }
+
+    private fun calculateFuel(int: Int): Int = if (int == 0) 0 else calculateFuel(int - 1) + int
+
+}
