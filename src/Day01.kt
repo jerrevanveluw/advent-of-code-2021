@@ -2,28 +2,28 @@ fun main() {
     Day01.all()
 }
 
-object Day01 {
+object Day01 : Day {
 
-    fun all() {
-        println("Day 01:")
-        part1()
-        part2()
+    fun all() = solve {
+        part1(1448)
+        part2(1471)
     }
 
-    private fun part1() = prepare()
-        .zipWithNext { a, b -> a < b }
-        .filter { it }
-        .count()
-        .report(1448)
+    private val part1 = report {
+        zipWithNext { a, b -> a < b }
+            .filter { it }
+            .count()
+    }
 
-    private fun part2() = prepare()
-        .windowed(4)
-        .map { (a, _, _, d) -> a < d }
-        .filter { it }
-        .count()
-        .report(1471)
+    private val part2 = report {
+        windowed(4)
+            .map { (a, _, _, d) -> a < d }
+            .filter { it }
+            .count()
+    }
 
-    private fun prepare() = readInput("Day01").asSequence()
-        .map { it.toInt() }
+    private fun <R : Any> report(block: Sequence<Int>.() -> R) = setup(block) {
+        map { it.toInt() }
+    }
 
 }

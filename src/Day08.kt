@@ -1,12 +1,20 @@
 fun main() {
-
-    val data = readInput("Day08").asSequence()
-
-    part1(data).report()
-    part2(data).report()
-
+    Day08.all()
 }
 
-private fun part1(data: Sequence<String>) = data.let { 0 }
+object Day08 : Day {
 
-private fun part2(data: Sequence<String>) = data.let { 0 }
+    fun all() = solve {
+        part1(null)
+        part2(null)
+    }
+
+    private val part1 = report { 0 }
+
+    private val part2 = report { 0 }
+
+    private fun <R : Any> report(block: Sequence<String>.() -> R) = setup(block) {
+        this
+    }
+
+}

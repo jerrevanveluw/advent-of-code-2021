@@ -3,23 +3,23 @@ import Day03.Counter.Strategy.LEAST
 import Day03.Counter.Strategy.MOST
 
 fun main() {
-
-    val data = readInput("Day03").asSequence()
-
-    Day03.part1(data).report(2743844)
-    Day03.part2(data).report(6677951)
-
+    Day03.all()
 }
 
-object Day03 {
+object Day03 : Day {
 
-    fun part1(data: Sequence<String>) = data
-        .fold(buildList { repeat(12) { add(Counter()) } }) { acc, cur ->
+    fun all() = solve {
+        part1(2743844)
+        part2(6677951)
+    }
+
+    private val part1 = report {
+        fold(buildList { repeat(12) { add(Counter()) } }) { acc, cur ->
             acc.zip(cur.map { it.toCounter() }).map { (a, b) -> a + b }
-        }
-        .let { it.toInt(MOST) * it.toInt(LEAST) }
+        }.let { it.toInt(MOST) * it.toInt(LEAST) }
+    }
 
-    fun part2(data: Sequence<String>) = data.toList().run {
+    private val part2 = report {
         findRecursively(MOST) * findRecursively(LEAST)
     }
 
@@ -49,12 +49,14 @@ object Day03 {
     private fun List<Counter>.toInt(strategy: Strategy) = joinToString("") { it.toInt(strategy).toString() }.toInt(2)
 
     private fun List<String>.findRecursively(strategy: Strategy, idx: Int = 0): Int =
-        if (size == 1) this.first().toInt(2)
+        if (size == 1) first().toInt(2)
         else filter { it[idx].digitToInt() == findDigit(idx, strategy) }
             .findRecursively(strategy, idx + 1)
 
     private fun List<String>.findDigit(idx: Int, strategy: Strategy) = map { it[idx] }
         .fold(Counter()) { acc, cur -> acc + cur.toCounter() }
         .toInt(strategy)
+
+    private fun <R : Any> report(block: List<String>.() -> R) = setup(block) { toList() }
 
 }

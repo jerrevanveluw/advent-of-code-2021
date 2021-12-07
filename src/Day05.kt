@@ -1,26 +1,26 @@
 fun main() {
-
-    val data = readInput("Day05").asSequence()
-
-    Day05.part1(data).report(4993)
-    Day05.part2(data).report(21101)
-
+    Day05.all()
 }
 
 
-object Day05 {
+object Day05 : Day {
 
-    fun part1(data: Sequence<String>) = Grid()
-        .apply { data.prepare().filter { (a, b) -> a.x == b.x || a.y == b.y }.onEach { addLine(it) } }
-        .countPointsWhereAtLeastTwoOverlap()
+    fun all() = solve {
+        part1(4993)
+        part2(21101)
+    }
 
-    fun part2(data: Sequence<String>) = Grid()
-        .apply { data.prepare().onEach { addLine(it) } }
-        .countPointsWhereAtLeastTwoOverlap()
+    private val part1 = report {
+        Grid().also {
+            filter { (a, b) -> a.x == b.x || a.y == b.y }.onEach { line -> it.addLine(line) }
+        }.countPointsWhereAtLeastTwoOverlap()
+    }
 
-    private fun Sequence<String>.prepare() = map { it.split(" -> ") }
-        .map { (a, b) -> a.toCoordinate() to b.toCoordinate() }
-        .toList()
+    private val part2 = report {
+        Grid().also {
+            onEach { line -> it.addLine(line) }
+        }.countPointsWhereAtLeastTwoOverlap()
+    }
 
     private data class Coordinate(val x: Int, val y: Int)
 
@@ -60,5 +60,11 @@ object Day05 {
     }
 
     private fun String.toCoordinate() = split(",").let { (x, y) -> Coordinate(x.toInt(), y.toInt()) }
+
+    private fun <R : Any> report(block: List<Pair<Coordinate, Coordinate>>.() -> R) = setup(block) {
+        map { it.split(" -> ") }
+            .map { (a, b) -> a.toCoordinate() to b.toCoordinate() }
+            .toList()
+    }
 
 }
