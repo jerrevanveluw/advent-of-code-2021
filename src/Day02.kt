@@ -34,7 +34,7 @@ object Day02 : Day {
     }
 
     private fun <R : Any> report(block: Sequence<Pair<Direction, Int>>.() -> R) = setup(block) {
-        this.map { it.split(" ") }
+        map { it.split(" ") }
             .map { (direction, value) -> Direction.valueOf(direction.uppercase()) to value.toInt() }
     }
 

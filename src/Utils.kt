@@ -14,7 +14,7 @@ fun <R : Any, T : Any> Day.setup(block: T.() -> R, transform: Sequence<String>.(
         .log(answer)
 }
 
-fun Any.log(correctAnswer: Any? = null) = println(this).also {
+fun Any.log(correctAnswer: Any? = null) = println("  $this").also {
     correctAnswer?.let { check(this == it) }
 }
 

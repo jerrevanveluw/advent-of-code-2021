@@ -29,7 +29,7 @@ object Day06 : Day {
     private val part2 = report {
         toList().let { data ->
             var fish = buildMap<Int, Long> { data.distinct().forEach { i -> put(i, data.count { it == i }.toLong()) } }
-            (1..256).forEach { _ ->
+            repeat(256) {
                 fish = fish
                     .map { (k, v) -> k - 1 to v }
                     .toMap().toMutableMap().apply {

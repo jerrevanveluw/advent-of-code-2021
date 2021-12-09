@@ -1,4 +1,5 @@
 import Day09.Ignore.BOTTOM
+import Day09.Ignore.Companion.opposite
 import Day09.Ignore.LEFT
 import Day09.Ignore.RIGHT
 import Day09.Ignore.TOP
@@ -17,67 +18,95 @@ object Day09 : Day {
     private val part1 = report {
         val grid = toGrid()
         toCoordinates()
-            .mapNotNull { (value, coordinate) -> if (grid.isLowPoint(value, coordinate)) value to coordinate else null }
-            .sumOf { it.first + 1 }
+            .mapNotNull { if (it.isLowPointIn(grid)) it else null }
+            .sumOf { (a, _) -> a + 1 }
     }
 
     private val part2 = report {
         val grid = toGrid()
         toCoordinates()
-            .mapNotNull { (value, coordinate) -> if (grid.isLowPoint(value, coordinate)) value to coordinate else null }
-            .map { grid.findBasins(it) }
+            .mapNotNull { if (it.isLowPointIn(grid)) it else null }
+            .map { it.findBasin(grid) }
             .map { it.distinct().count() }
-            .sorted()
-            .takeLast(3)
+            .sortedDescending()
+            .take(3)
             .reduce { a, b -> a * b }
     }
 
-    private fun List<List<Int>>.findBasins(lowPoint: Pair<Int, Pair<Int, Int>>, ignore: Ignore? = null, coordinates: List<Pair<Int, Int>> = emptyList()): List<Pair<Int, Int>> =
-        lowPoint.let { (value, coordinate) ->
-            val (x, y) = coordinate
-            val left = runCatching { this[y][x - 1] }.getOrNull()
-            val right = runCatching { this[y][x + 1] }.getOrNull()
-            val top = runCatching { this[y - 1][x] }.getOrNull()
-            val bottom = runCatching { this[y + 1][x] }.getOrNull()
+    private fun ValueAtCoordinate.findBasin(
+        grid: List<List<Int>>,
+        ignore: Ignore? = null,
+        previousCoordinates: List<ValueAtCoordinate> = emptyList()
+    ): List<Pair<Int, Int>> = let {
+        val (x, y) = it.coordinate
+        val coordinates = previousCoordinates + it
 
-            val a = if (ignore == LEFT || left == null || left == 9) emptyList()
-            else (bla(value, left, (x - 1 to y), RIGHT, coordinates + coordinate))
+        val left = grid.getValueAt(x - 1 to y)?.run {
+            if (ignore == LEFT || value >= 9) null
+            else findAnother(it.value, grid, LEFT, coordinates)
+        } ?: emptyList()
 
-            val b = if (ignore == RIGHT || right == null || right == 9) emptyList()
-            else (bla(value, right, (x + 1 to y), LEFT, coordinates + coordinate))
+        val right = grid.getValueAt(x + 1 to y)?.run {
+            if (ignore == RIGHT || value >= 9) null
+            else findAnother(it.value, grid, RIGHT, coordinates)
+        } ?: emptyList()
 
-            val c = if (ignore == TOP || top == null || top == 9) emptyList()
-            else (bla(value, top, (x to y - 1), BOTTOM, coordinates + coordinate))
+        val top = grid.getValueAt(x to y - 1)?.run {
+            if (ignore == TOP || value >= 9) null
+            else findAnother(it.value, grid, TOP, coordinates)
+        } ?: emptyList()
 
-            val d = if (ignore == BOTTOM || bottom == null || bottom == 9) emptyList()
-            else (bla(value, bottom, (x to y + 1), TOP, coordinates + coordinate))
-            a + b + c + d + coordinate
-        }
+        val bottom = grid.getValueAt(x to y + 1)?.run {
+            if (ignore == BOTTOM || value >= 9) null
+            else findAnother(it.value, grid, BOTTOM, coordinates)
+        } ?: emptyList()
 
-    private fun List<List<Int>>.bla(value: Int, other: Int, coordinate: Pair<Int, Int>, ignore: Ignore, coordinates: List<Pair<Int, Int>>) =
-        if (compare(value) { other }) findBasins(other to coordinate, ignore, coordinates) else emptyList()
+        left + right + top + bottom + it.coordinate
+    }
+
+    private fun List<List<Int>>.getValueAt(coordinate: Pair<Int, Int>) = coordinate
+        .let { (x, y) -> runCatching { ValueAtCoordinate(this[y][x], coordinate) }.getOrNull() }
+
+    private fun List<List<Int>>.getBy(coordinate: Pair<Int, Int>) = getValueAt(coordinate)?.value
+
+    private fun ValueAtCoordinate.findAnother(
+        current: Int, grid: List<List<Int>>,
+        ignore: Ignore, coordinates: List<ValueAtCoordinate>
+    ) = if (current - value < 0) findBasin(grid, ignore.opposite(), coordinates) else null
 
     private enum class Ignore {
-        LEFT, RIGHT, TOP, BOTTOM
+        LEFT, RIGHT, TOP, BOTTOM;
+
+        companion object {
+            fun Ignore.opposite() = when (this) {
+                LEFT -> RIGHT
+                RIGHT -> LEFT
+                TOP -> BOTTOM
+                BOTTOM -> TOP
+            }
+        }
     }
 
     private const val gridSizeX = 100
-    private fun List<Int>.toGrid() = chunked(gridSizeX)
-    private fun List<Int>.toCoordinates() = mapIndexed { idx, i -> Pair(i, idx % gridSizeX to idx / gridSizeX) }
+    private fun Sequence<Int>.toGrid() = chunked(gridSizeX).toList()
+    private fun Sequence<Int>.toCoordinates() = mapIndexed { idx, i -> Pair(i, idx % gridSizeX to idx / gridSizeX) }
+        .map(::ValueAtCoordinate)
 
-    private fun List<List<Int>>.isLowPoint(value: Int, coordinate: Pair<Int, Int>): Boolean {
-        val (x, y) = coordinate
-        val a = compare(value) { this[y][x - 1] }
-        val b = compare(value) { this[y][x + 1] }
-        val c = compare(value) { this[y - 1][x] }
-        val d = compare(value) { this[y + 1][x] }
-        return (a && b && c && d)
+    private data class ValueAtCoordinate(val value: Int, val coordinate: Pair<Int, Int>) {
+        constructor(v: Pair<Int, Pair<Int, Int>>) : this(v.first, v.second)
     }
 
-    private fun compare(int: Int, block: () -> Int) = int - (runCatching { block() }.getOrNull() ?: 9) < 0
+    private fun ValueAtCoordinate.isLowPointIn(grid: List<List<Int>>): Boolean {
+        val (x, y) = coordinate
+        val l = value - (grid.getBy(x - 1 to y) ?: 9) < 0
+        val r = value - (grid.getBy(x + 1 to y) ?: 9) < 0
+        val t = value - (grid.getBy(x to y - 1) ?: 9) < 0
+        val b = value - (grid.getBy(x to y + 1) ?: 9) < 0
+        return (l && r && t && b)
+    }
 
-    private fun <R : Any> report(block: List<Int>.() -> R) = setup(block) {
-        map { it.split("").mapNotNull { s -> s.toIntOrNull() } }.toList().flatten()
+    private fun <R : Any> report(block: Sequence<Int>.() -> R) = setup(block) {
+        map { it.split("").mapNotNull { s -> s.toIntOrNull() } }.flatten()
     }
 
 }

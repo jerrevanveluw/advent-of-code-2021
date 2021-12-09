@@ -8,5 +8,7 @@ fun main() {
     Day06.all()
     Day07.all()
     Day08.all()
+    Day09.all()
+    Day10.all()
     println("All done!")
 }
