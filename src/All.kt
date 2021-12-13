@@ -11,5 +11,7 @@ fun main() {
     Day09.all()
     Day10.all()
     Day11.all()
+    Day12.all()
+    Day13.all()
     println("All done!")
 }
