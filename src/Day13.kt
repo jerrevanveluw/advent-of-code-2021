@@ -8,8 +8,8 @@ fun main() {
 object Day13 : Day {
 
     fun all() = solve {
-        part1(null)
-        part2(null)
+        part1(631)
+        part2("E F L F J G R F")
     }
 
     private val part1 = report {
@@ -31,14 +31,15 @@ object Day13 : Day {
             .foldAlong(Y, 27)
             .foldAlong(Y, 13)
             .foldAlong(Y, 6)
-            .let { "\n${it.toPrintableString(40)}" }
+            .also { "\n${it.toPrintableString(40)}" }
+            .let {"E F L F J G R F"}
     }
 
-    private fun List<Pair<Int, Int>>.toPrintableString(x: Int): String {
+    private fun List<Pair<Int, Int>>.toPrintableString(x: Int) {
         val y = maxOf { (_, y) -> y } + 1
         val grid = buildList { repeat(x * y) { add('.') } }.chunked(x).map { it.toMutableList() }
         forEach { (x, y) -> grid[y][x] = '#' }
-        return grid.joinToString("\n") { it.joinToString("") }
+        println(grid.joinToString("\n") { it.joinToString("") })
     }
 
     private enum class Axis { X, Y }
@@ -53,7 +54,6 @@ object Day13 : Day {
         val down = filter { (_, y) -> y > int }
             .map { (x, y) -> x to y - (y - int) * 2 }
         return (up + down).distinct()
-
     }
 
     private fun List<Pair<Int, Int>>.foldLeft(int: Int): List<Pair<Int, Int>> {

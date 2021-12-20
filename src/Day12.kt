@@ -12,23 +12,35 @@ object Day12 : Day {
     }
 
     private val part1 = report {
-        toMutableSet().toTree(find { it.a == Point.Start }!!)
+        toTree(Point.Start)
+            .flatten()
+            .also { println(it) }
+            .count()
     }
 
     private val part2 = report {
         count()
     }
 
-    private class Tree(val root: Point, val children: List<Tree>) {
+    private class Tree(val root: Point, val children: List<Tree> = emptyList()) {
+        fun flatten(): List<List<Point>> {
+//            return if (children.isEmpty()) listOf(listOf(root)) else children.map { it.flatten().flatten() }
+            return listOf(listOf(listOf( root)).flatten() +  children.map { it.root })
+        }
+
         override fun toString(): String = if (children.isNotEmpty()) "$root -> $children" else "$root"
     }
 
-    private fun MutableSet<Path>.toTree(path: Path): Tree {
-        remove(path)
-        val root = path.a
-        val children = filter { it.a.name == path.b.name }
-            .map { toTree(it) }
-        return if (children.isEmpty()) Tree(root, listOf(Tree(Point.End, listOf()))) else Tree(root, children)
+    private fun Set<Path>.toTree(root: Point): Tree {
+        if (root is Point.End) return Tree(root)
+        val pathsToProcess = filter { (a, b) -> a.name == root.name || b.name == root.name }
+            .map { (a, b) -> if (a.name == root.name) a to b else b to a }.toSet()
+        val newPaths = filter { (a, b) -> a.name != root.name && b.name != root.name }.toSet()
+        val children = pathsToProcess
+            .map { (_, child) -> child }
+            .map { newPaths.toTree(it) }
+
+        return if (children.isEmpty()) Tree(root, listOf(Tree(Point.End))) else Tree(root, children)
     }
 
     private sealed class Point(val name: String) {
@@ -65,7 +77,7 @@ object Day12 : Day {
                 }
                 a.toPoint() to b.toPoint()
             }
-            .map { (a, b) -> if (a is Point.End) b to a else a to b }
+            .flatMap { (a, b) -> listOf(a to b, b to a) }
             .map { (a, b) -> Path(a, b) }
             .toSet()
     }
